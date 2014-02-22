@@ -8,8 +8,12 @@ abstract class ObjectModel {
 	
 	protected $table;
 	
+	/**
+	 * Imports Table object from database.
+	 */
 	public function __construct(){
-		$this->init();	
+		$this->table = Database::i()->table( $this->getTableBasename() );
+		$this->tablename = $this->table->schema()->table;
 	}
 	
 	/**
@@ -19,11 +23,11 @@ abstract class ObjectModel {
 	abstract public function getTableBasename();
 	
 	/**
-	 * Imports Table to object.
+	 * Returns the table name.
+	 * @return string Table name
 	 */
-	final public function init(){
-		$this->table = Database::i()->table( $this->getTableBasename() );
-		$this->tablename = $this->table->schema()->table;
+	final public function getTableName(){
+		return $this->tablename;
 	}
 	
 	/**
@@ -35,12 +39,12 @@ abstract class ObjectModel {
 	}
 	
 	/**
-	 * Returns the table name.
-	 * @return string Table name
+	 * Returns model's Table's Schema instance.
+	 * @return Table\Schema
 	 */
-	final public function getTableName(){
-		return $this->tablename;
-	}
+	 final public function schema(){
+	 	return $this->table->schema();
+	 }
 	
 	/**
 	 * Returns true if value is a column name for the table.
@@ -67,15 +71,6 @@ abstract class ObjectModel {
 	}
 	
 	/**
-	* Select a row or (columns from a row) from the table.
-	*
-	* @see DB::select()
-	*/
-	public function select( array $where, $select = '*' ){
-		return $this->table->select( $where, $select );
-	}
-	
-	/**
 	* Insert a row into the table.
 	*
 	* @see DB::insert()
@@ -90,9 +85,6 @@ abstract class ObjectModel {
 		
 		return $success;
 	}
-	
-	protected function beforeInsert( &$data ){}
-	protected function afterInsert( &$success ){}
 	
 	/**
 	* Update a row in the table
@@ -110,9 +102,6 @@ abstract class ObjectModel {
 		return $success;
 	}
 	
-	protected function beforeUpdate( &$data, &$where ){}
-	protected function afterUpdate( &$success ){}
-	
 	/**
 	* Delete a row in the table
 	*
@@ -129,9 +118,6 @@ abstract class ObjectModel {
 		return $success;
 	}
 	
-	protected function beforeDelete( &$where ){}
-	protected function afterDelete( &$success ){}
-	
 	/**
 	* Update a single row column value in the table
 	*
@@ -142,10 +128,49 @@ abstract class ObjectModel {
 	}
 	
 	/**
+	* Select a row or (columns from a row) from the table.
+	*
+	* @see DB::select()
+	*/
+	public function select( array $where, $select = '*' ){
+		return $this->table->select( $where, $select );
+	}
+	
+	/**
 	 * Perform a PDO query
 	 */
 	public function query( $query ){
 		return $this->table->query($query);
 	}
+	
+	/**
+	 * Perform action before insert().
+	 */
+	protected function beforeInsert( &$data ){}
+	
+	/**
+	 * Perform action after insert().
+	 */
+	protected function afterInsert( &$success ){}
+	
+	/**
+	 * Perform action before update().
+	 */
+	protected function beforeUpdate( &$data, &$where ){}
+	
+	/**
+	 * Perform action after update().
+	 */
+	protected function afterUpdate( &$success ){}
+	
+	/**
+	 * Perform action before delete().
+	 */
+	protected function beforeDelete( &$where ){}
+	
+	/**
+	 * Perform action after delete().
+	 */
+	protected function afterDelete( &$success ){}
 	
 }
