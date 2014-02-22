@@ -8,14 +8,14 @@
  * Registers a table schema.
  */
 function register_schema( Wells\Database\Table\Schema $schema ){
-	Wells\Database\Database::i()->reigsterSchema($schema);
+	Wells\Database\Database::i()->registerSchema($schema);
 }
 
 /**
- * Registers an ObjectModel instance
+ * Registers an Model\Controller instance
  */	
-function register_model( Wells\Database\ObjectModel $model ){
-	Wells\Util\Registry::addToGroup( 'model', $model, $model->getTableBasename() );
+function register_model_controller( Wells\Database\Model\Controller $controller ){
+	Wells\Util\Registry::addToGroup( 'model-controller', $controller, $controller->getTableBasename() );
 	return true;
 }
 
@@ -41,10 +41,10 @@ function table( $name ){
 }
 
 /**
- * Returns an ObjectModel instance
+ * Returns an Model\Controller instance
  */	
-function model( $table_basename ){
-	return Wells\Util\Registry::getFromGroup( 'model', $table_basename );
+function model_controller( $table_basename ){
+	return Wells\Util\Registry::getFromGroup( 'model-controller', $table_basename );
 }
 
 /**

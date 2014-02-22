@@ -7,6 +7,7 @@
 namespace Wells\Database;
 
 use PDO;
+use Exception;
 use FluentPDO;
 
 class Database {
@@ -16,6 +17,12 @@ class Database {
 	 * @var int
 	 */
 	public $num_queries;
+	
+	/**
+	 * Whether to debug queries.
+	 * @var boolean
+	 */
+	public $debug;
 	
 	/**
 	 * Database Name
@@ -117,15 +124,13 @@ class Database {
 	/**
 	 * Connects to the database using settings from init().
 	 */
-	public static function connect( $debug = DEBUG ){
+	public static function connect(){
 		
 		$_this = self::i();
 		
 		$dsn = $_this->getDriver() . ':dbname='. $_this->name . ';host=' . $_this->host;
 		
 		$_this->fpdo = new FluentPDO( new PDO($dsn, $_this->user, $_this->pass) );
-		
-		$_this->fpdo->debug = $debug;
 				
 		self::$connected = true;
 	}
@@ -148,12 +153,28 @@ class Database {
 	}
 	
 	/**
+	 * Whether to debug FluentPDO
+	 */
+	public function setDebug( $value ){
+			
+		$this->debug = (bool) $value;
+		
+		if ( $this->isConnected() ){
+			$this->fpdo->debug = $this->debug;
+		}
+		
+		return $this;
+	}
+	
+	/**
 	 * Returns the PDO instance.
 	 */
 	public function getPdo(){
+			
 		if ( ! $this->isConnected() ){
 			self::connect();
 		}
+		
 		return $this->fpdo->pdo;
 	}
 	
@@ -392,7 +413,7 @@ class Database {
 	function __call( $func, $args ){
 		
 		if ( is_callable(array($this->fpdo, $func)) ){
-			return call( array($this->fpdo, $func), $args );
+			return call_user_func_array(array($this->fpdo, $func), $args);
 		}
 	}
 	
