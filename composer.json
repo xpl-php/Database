@@ -2,7 +2,7 @@
 	"name": "phpf/database",
 	"type": "library",
 	"description": "Phpf Database package",
-	"keywords": ["Database", "PDO"],
+	"keywords": ["Database", "PDO", "Fluent", "ORM", "Datamapper"],
 	"homepage": "https://github.com/phpf/Database",
 	"license": "MIT",
 	"authors": [
@@ -13,9 +13,10 @@
 	],
 	"require": {
 		"php": ">=5.3",
-		"phpf/util": "master",
-		"phpf/cache": "master",
-		"phpf/config": "master"
+		"php-ext": "pdo",
+		"phpf/util": "dev-master",
+		"phpf/cache": "dev-master",
+		"phpf/config": "dev-master"
 	},
 	"autoload": {
 		"psr-0": {
