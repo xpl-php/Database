@@ -2,6 +2,10 @@
 
 namespace FluentPDO\Query;
 
+use IteratorAggregate;
+use FluentPDO\FluentPDO;
+use Exception;
+
 /** Base query builder
  */
 abstract class Base implements IteratorAggregate {
@@ -150,8 +154,7 @@ abstract class Base implements IteratorAggregate {
 				$rows = ($this->result) ? $this->result->rowCount() : 0;
 				
 				/**
-				 * Modified 2/18 (Wells)
-				 * 
+				 * Modified 2/18 (Phpf)
 				 * fopen() & fwrite() using php://stderr rather than STDERR constant.
 				 */
 				$stderr = fopen('php://stderr', 'w+');
@@ -235,7 +238,7 @@ abstract class Base implements IteratorAggregate {
 	 */
 	public function getQuery($formated = true) {
 		$query = $this->buildQuery();
-		if ($formated) $query = FluentUtils::formatQuery($query);
+		if ($formated) $query = FluentPDO\Fluent\Utils::formatQuery($query);
 		return $query;
 	}
 
@@ -303,14 +306,14 @@ abstract class Base implements IteratorAggregate {
 		if ($value === false) {
 			return "0";
 		}
-		if (is_int($value) || $value instanceof FluentLiteral) { // number or SQL code - for example "NOW()"
+		if (is_int($value) || $value instanceof FluentPDO\Fluent\Literal) { // number or SQL code - for example "NOW()"
 			return (string) $value;
 		}
 		return $this->fpdo->getPdo()->quote($value);
 	}
 
 	private function formatValue($val) {
-		if ($val instanceof DateTime) {
+		if ($val instanceof \DateTime) {
 			return $val->format("Y-m-d H:i:s"); //! may be driver specific
 		}
 		return $val;
