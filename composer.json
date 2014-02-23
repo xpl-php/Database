@@ -13,9 +13,9 @@
 	],
 	"require": {
 		"php": ">=5.3",
-		"phpf/util": "dev-master",
-		"phpf/cache": "dev-master",
-		"phpf/config": "dev-master"
+		"phpf/util": "master",
+		"phpf/cache": "master",
+		"phpf/config": "master"
 	},
 	"autoload": {
 		"psr-0": {
