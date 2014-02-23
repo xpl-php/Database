@@ -1,0 +1,26 @@
+{
+	"name": "phpf/database",
+	"type": "library",
+	"description": "Phpf Database package",
+	"keywords": ["Database", "PDO"],
+	"homepage": "https://github.com/phpf/Database",
+	"license": "MIT",
+	"authors": [
+		{
+			"name": "The PHPf Developer",
+			"email": "wellspeterson@live.com"
+		}
+	],
+	"require": {
+		"php": ">=5.3",
+		"phpf/util": "dev-master",
+		"phpf/cache": "dev-master",
+		"phpf/config": "dev-master"
+	},
+	"autoload": {
+		"psr-0": {
+			"Phpf\\Database\\": "src/"
+		}
+	},
+	"minimum-stability": "dev"
+}
