@@ -238,7 +238,7 @@ abstract class Base implements IteratorAggregate {
 	 */
 	public function getQuery($formated = true) {
 		$query = $this->buildQuery();
-		if ($formated) $query = FluentPDO\Fluent\Utils::formatQuery($query);
+		if ($formated) $query = \FluentPDO\Fluent\Utils::formatQuery($query);
 		return $query;
 	}
 
@@ -306,7 +306,7 @@ abstract class Base implements IteratorAggregate {
 		if ($value === false) {
 			return "0";
 		}
-		if (is_int($value) || $value instanceof FluentPDO\Fluent\Literal) { // number or SQL code - for example "NOW()"
+		if (is_int($value) || $value instanceof \FluentPDO\Fluent\Literal) { // number or SQL code - for example "NOW()"
 			return (string) $value;
 		}
 		return $this->fpdo->getPdo()->quote($value);
