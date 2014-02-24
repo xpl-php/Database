@@ -13,7 +13,7 @@
 	],
 	"require": {
 		"php": ">=5.3",
-		"php-ext": "pdo",
+		"ext-pdo": "*",
 		"phpf/util": "dev-master",
 		"phpf/cache": "dev-master",
 		"phpf/config": "dev-master"
