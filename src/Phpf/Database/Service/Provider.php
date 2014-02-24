@@ -6,7 +6,7 @@
 
 namespace Phpf\Database\Service;
 
-class Provider implements Phpf\Service\Provider {
+class Provider implements \Phpf\Service\Provider {
 	
 	protected $provided = false;
 	
