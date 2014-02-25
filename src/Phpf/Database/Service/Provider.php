@@ -21,14 +21,15 @@ class Provider implements \Phpf\Service\Provider {
 		include $basedir . '/functions.php';
 		
 		// FluentPDO autoloader
-		spl_autoload_register( function ($class) use($basedir){
+		spl_autoload_register( function ($class) use($basedir) {
 				
-			if ( 0 !== strpos($class, 'FluentPDO') )
-				return;
+			if ( 0 === strpos($class, 'FluentPDO') ){
+					
+				$path = $basedir . '/' . strtr($class, '\\', '/') . '.php';
+				
+				require $path;
+			}
 			
-			$path = $basedir . '/' . str_replace('\\', '/', $class) . '.php';
-			
-			require $path;
 		} );
 		
 		$this->provided = true;	
