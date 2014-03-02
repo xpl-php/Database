@@ -12,16 +12,16 @@ use Exception;
 class Database {
 	
 	/**
-	 * Number of queries run
-	 * @var int
-	 */
-	public $num_queries;
-	
-	/**
 	 * Whether to debug queries.
 	 * @var boolean
 	 */
 	public $debug;
+	
+	/**
+	 * Number of queries run
+	 * @var int
+	 */
+	public $num_queries;
 	
 	/**
 	 * Database Name
@@ -66,21 +66,21 @@ class Database {
 	protected $fpdo;
 	
 	/**
+	 * Whether currently connected
+	 * @var boolean
+	 */
+	protected static $connected;
+	
+	/**
 	 * Singleton instance.
 	 * @var Database
 	 */
 	protected static $_instance;
 	
 	/**
-	 * Whether currently connected
-	 * @var boolean
-	 */
-	public static $connected;
-	
-	/**
 	 * Returns singleton.
 	 */
-	public static function i(){
+	public static function instance(){
 		if ( ! isset(self::$_instance) )
 			self::$_instance = new self();
 		return self::$_instance;
@@ -99,7 +99,7 @@ class Database {
 	 */
 	public static function init($dbName, $dbHost, $dbUser, $dbPass, $tablePrefix = '', $dbDriver = 'mysql'){
 		
-		$_this = self::i();
+		$_this = self::instance();
 		
 		$_this->name = $dbName;
 		$_this->host = $dbHost;
@@ -125,7 +125,7 @@ class Database {
 	 */
 	public static function connect(){
 		
-		$_this = self::i();
+		$_this = self::instance();
 		
 		$dsn = $_this->getDriver() . ':dbname='. $_this->name . ';host=' . $_this->host;
 		
@@ -138,7 +138,7 @@ class Database {
 	 * Destroys the current database connection.
 	 */
 	public static function disconnect(){
-		$_this = self::i();
+		$_this = self::instance();
 		unset($_this->fpdo);
 		self::$connected = false;
 	}
@@ -163,18 +163,6 @@ class Database {
 		}
 		
 		return $this;
-	}
-	
-	/**
-	 * Returns the PDO instance.
-	 */
-	public function getPdo(){
-			
-		if ( ! $this->isConnected() ){
-			self::connect();
-		}
-		
-		return $this->fpdo->pdo;
 	}
 	
 	/**
@@ -284,16 +272,40 @@ class Database {
 	}
 	
 	/**
+	 * Returns the PDO instance.
+	 */
+	public function pdo(){
+			
+		if ( ! $this->isConnected() ){
+			self::connect();
+		}
+		
+		return $this->fpdo->pdo;
+	}
+	
+	/**
+	 * Returns the FluentPDO instance.
+	 */
+	public function fluent(){
+			
+		if ( ! $this->isConnected() ){
+			self::connect();
+		}
+		
+		return $this->fpdo;
+	}
+	
+	/**
 	 * Performs a database query using PDO's query() method directly.
 	 */
 	public function query( $sql ){
-		return $this->getPdo()->query($sql);
+		return $this->pdo()->query($sql);
 	}
 	
 	/**
 	 * Performs a select query using FluentPDO
 	 */
-	public function select( $table, array $where, $select = '*', $asObjects = true ){
+	public function select( $table, $where, $select = '*', $asObjects = true ){
 		
 		if ( ! $this->isConnected() ){
 			self::connect();
@@ -370,7 +382,7 @@ class Database {
 	 */
 	public function getInstalledTables(){
 		
-		$array = $this->getPdo()
+		$array = $this->pdo()
 			->query('show tables')
 			->fetchAll();
 		

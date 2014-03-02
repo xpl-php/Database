@@ -1,49 +1,51 @@
 <?php
 /**
- * @package Wells.Database
- * @subpackage functions
+ * @package Phpf.Database
  */
 
-/**
- * Registers a table schema.
- */
-function register_schema( Phpf\Database\Table\Schema $schema ){
-	Phpf\Database\Database::i()->registerSchema($schema);
-}
+use Phpf\Database\Database;
 
 /**
  * Returns the database instance
  */
-function db(){
-	return Phpf\Database\Database::i();	
+function database(){
+	return Database::instance();	
+}
+
+/**
+ * Registers a table schema.
+ */
+function db_register_schema( Phpf\Database\Table\Schema $schema ){
+	Database::instance()->registerSchema($schema);
+	return;
 }
 
 /**
  * Returns a Schema instance
  */
-function schema( $name ){
-	return Phpf\Database\Database::i()->schema($name);	
+function db_get_schema( $name ){
+	return Database::instance()->schema($name);	
 }
 
 /**
  * Returns a Table instance
  */
-function table( $name ){
-	return Phpf\Database\Database::i()->table($name);	
+function db_get_table( $name ){
+	return Database::instance()->table($name);	
 }
 
 /**
  * Returns array of installed table names.
  */
 function db_get_installed_tables(){
-	return Phpf\Database\Database::i()->getInstalledTables();
+	return Database::instance()->getInstalledTables();
 }
 
 /**
  * Returns number of queries run during current request.
  */
 function db_get_query_count(){
-	return Phpf\Database\Database::i()->num_queries;
+	return Database::instance()->num_queries;
 }
 
 /**
@@ -51,14 +53,14 @@ function db_get_query_count(){
  */
 function db_create_table( $table ){
 	
-	$db = Phpf\Database\Database::i();
+	$db = Database::instance();
 	
 	if ( $db->isTableInstalled($table) )
 		return 2;
 	
 	$schema = $db->schema($table);
 	
-	$create_ddl = Phpf\Database\Sql\Writer::createTable($schema);
+	$create_ddl = \Phpf\Database\Sql\Writer::createTable($schema);
 
 	$db->query($create_ddl);
 	
@@ -70,14 +72,14 @@ function db_create_table( $table ){
  */
 function db_drop_table( $table ) {
 	
-	$db = Phpf\Database\Database::i();
+	$db = Database::instance();
 	
 	if ( ! $db->isTableInstalled($table) )
 		return 2;
 
 	$schema = $db->schema($table);
 
-	$drop_ddl = Phpf\Database\Sql\Writer::dropTable($schema);
+	$drop_ddl = \Phpf\Database\Sql\Writer::dropTable($schema);
 
 	$db->query($drop_ddl);
 	

@@ -5,6 +5,7 @@ namespace FluentPDO\Query;
 use IteratorAggregate;
 use FluentPDO\FluentPDO;
 use Exception;
+use PDO;
 
 /** Base query builder
  */

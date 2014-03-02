@@ -1,7 +1,7 @@
 <?php
 /**
  * @package Phpf.Database
- * @subpackage Service.Provider
+ * @subpackage Service
  */
 
 namespace Phpf\Database\Service;
@@ -15,17 +15,15 @@ class Provider implements \Phpf\Service\Provider {
 	}
 	
 	public function provide(){
-		
-		$basedir = dirname(__DIR__);
 			
-		include $basedir . '/functions.php';
+		include dirname(__DIR__) . '/functions.php';
 		
 		// FluentPDO autoloader
-		spl_autoload_register( function ($class) use($basedir) {
-				
+		spl_autoload_register( function ($class){
+			
 			if ( 0 === strpos($class, 'FluentPDO') ){
-					
-				$path = $basedir . '/' . strtr($class, '\\', '/') . '.php';
+			
+				$path = dirname(__DIR__) . '/' . str_replace('\\', '/', $class) . '.php';
 				
 				require $path;
 			}

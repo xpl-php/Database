@@ -11,7 +11,7 @@ class Table {
 	/**
 	 * Sets Schema and Database objects as properties.
 	 */
-	public function __construct( Table\Schema $schema, Database &$db ){
+	final public function __construct( Table\Schema $schema, Database &$db ){
 		$this->schema = $schema;
 		$this->db =& $db;
 	}
@@ -27,7 +27,7 @@ class Table {
 	/**
 	* Select a row or (columns from a row) from the table.
 	*
-	* @see DB::select()
+	* @see Database::select()
 	*/
 	public function select( $where, $select = '*' ){
 		return $this->db->select($this->schema->table, $where, $select);
@@ -36,7 +36,7 @@ class Table {
 	/**
 	* Insert a row into the table.
 	*
-	* @see DB::insert()
+	* @see Database::insert()
 	*/
 	public function insert( $data ){
 		return $this->db->insert($this->schema->table, $data);
@@ -45,7 +45,7 @@ class Table {
 	/**
 	* Update a row in the table
 	*
-	* @see DB::update()
+	* @see Database::update()
 	*/	
 	public function update( $data, $where ){
 		return $this->db->update($this->schema->table, $data, $where);
@@ -54,7 +54,7 @@ class Table {
 	/**
 	* Delete a row in the table
 	*
-	* @see DB::delete()
+	* @see Database::delete()
 	*/
 	public function delete( $where ) {
 		return $this->db->delete($this->schema->table, $where);
@@ -63,7 +63,7 @@ class Table {
 	/**
 	* Update a single row column value in the table
 	*
-	* @see DB::update()
+	* @see Database::update()
 	*/
 	public function updateField( $name, $value, array $where ){
 		return $this->update(array($name => $value), $where);
@@ -71,6 +71,8 @@ class Table {
 	
 	/**
 	 * Performs a query directly on PDO
+	 * 
+	 * @see Database::query()
 	 */
 	public function query( $query ){
 		return $this->db->query($query);	

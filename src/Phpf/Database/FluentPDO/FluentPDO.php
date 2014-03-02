@@ -14,7 +14,6 @@
 namespace FluentPDO;
 
 use PDO;
-use FluentPDO\Fluent\Structure;
 
 class FluentPDO {
 
@@ -25,10 +24,10 @@ class FluentPDO {
 	/** @var boolean|callback */
 	public $debug;
 
-	function __construct(PDO $pdo, Structure $structure = null) {
+	function __construct( PDO $pdo, Fluent\Structure $structure = null) {
 		$this->pdo = $pdo;
 		if (!$structure) {
-			$structure = new Structure;
+			$structure = new Fluent\Structure;
 		}
 		$this->structure = $structure;
 	}
@@ -40,7 +39,7 @@ class FluentPDO {
 	 */
 	public function from($table, $primaryKey = null) {
 			
-		$query = new FluentPDO\Query\Select($this, $table);
+		$query = new Query\Select($this, $table);
 		if ($primaryKey) {
 			$tableTable = $query->getFromTable();
 			$tableAlias = $query->getFromAlias();
@@ -58,7 +57,7 @@ class FluentPDO {
 	 */
 	public function insertInto($table, $values = array()) {
 		
-		$query = new FluentPDO\Query\Insert($this, $table, $values);
+		$query = new Query\Insert($this, $table, $values);
 		return $query;
 	}
 
@@ -72,7 +71,7 @@ class FluentPDO {
 	 */
 	public function update($table, $set = array(), $primaryKey = null) {
 
-		$query = new FluentPDO\Query\Update($this, $table);
+		$query = new Query\Update($this, $table);
 		$query->set($set);
 		if ($primaryKey) {
 			$primaryKeyName = $this->getStructure()->getPrimaryKey($table);
@@ -89,7 +88,7 @@ class FluentPDO {
 	 */
 	public function delete($table, $primaryKey = null) {
 
-		$query = new FluentPDO\Query\Delete($this, $table);
+		$query = new Query\Delete($this, $table);
 		if ($primaryKey) {
 			$primaryKeyName = $this->getStructure()->getPrimaryKey($table);
 			$query = $query->where($primaryKeyName, $primaryKey);

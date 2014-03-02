@@ -14,10 +14,7 @@
 	"require": {
 		"php": ">=5.3",
 		"ext-pdo": "*",
-		"phpf/util": "dev-master",
-		"phpf/service": "dev-master",
-		"phpf/cache": "dev-master",
-		"phpf/config": "dev-master"
+		"phpf/util": "dev-master"
 	},
 	"autoload": {
 		"psr-0": {

@@ -14,9 +14,9 @@ class Schema {
 		
 	public $primary_key;			// string - required.
 		
-	public $unique_keys = array();	// indexed array (exclusive of $primary_key)
+	public $unique_keys = array();	// array (exclusive of $primary_key)
 		
-	public $keys = array();			// indexed array (exclusive of $primary_key and $unique_keys)
+	public $keys = array();			// array (exclusive of $primary_key and $unique_keys)
 	
 	public function __construct( array $args ){
 		
@@ -25,7 +25,7 @@ class Schema {
 		}
 	
 		if ( ! isset($this->table_basename) ){
-			trigger_error('Must set Database\Table\Schema property $table_basename.');	
+			throw new \RuntimeException('Must set Database\Table\Schema property $table_basename.');	
 		}
 	}
 	
@@ -42,8 +42,8 @@ class Schema {
 	public function isKey( $column ){
 		return (bool) (
 			$column === $this->primary_key 
-			|| in_array($column, $this->keys) 
-			|| in_array($column, $this->unique_keys)
+			|| isset($this->keys[$column]) 
+			|| isset($this->unique_keys[$column])
 		);
 	}
 
@@ -56,10 +56,10 @@ class Schema {
 	*/
 	public function getColumnFormat( $column ){
 		
-		if ( !$this->isColumn( $column ) )
+		if ( !$this->isColumn($column) )
 			return false;
 		
-		$field = strtolower( $this->columns[ $column ] );
+		$field = strtolower($this->columns[$column]);
 		
 		if ( strpos($field, 'int') !== false || strpos($field, 'time') !== false )
 			return '%d';
@@ -112,7 +112,7 @@ class Schema {
 		$format = $this->getColumnFormat($column);
 		
 		if ( '%s' === $format ){
-			$value = esc_sql_like($value);
+			$value = \Phpf\Util\Str::escSqlLike($value);
 			if ($like_wildcard)
 				$value = '%' . $value . '%';
 			$return = "$column LIKE '$value'";	
