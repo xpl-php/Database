@@ -70,3 +70,16 @@ if ( 0 !== $rows_affected ){
         $new_user_id = $cntrl->select(array('name' => 'This Guy'), 'id');
 }
 ```
+
+## Fluent
+
+The Database object wraps FluentPDO, an excellent fluent interface for PDO. To use it, call `Database::instance()->fluent()`.
+
+```php
+$db = Database::instance();
+$fpdo = $db->fluent();
+
+$fpdo->from('user')
+	->where(array('email', 'someguy@gmail.com')
+	// etc...
+```
