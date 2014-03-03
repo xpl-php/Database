@@ -35,7 +35,7 @@ Database::instance()->registerSchema(
 		'table_basename' => 'user',
 		'columns' => array(
 			'id' => 'INT(10) NOT NULL AUTO_INCREMENT',
-                        'name' => 'VARCHAR(255) NOT NULL',
+			'name' => 'VARCHAR(255) NOT NULL',
 			'email' => 'VARCHAR(255) NOT NULL',
 			'password' => 'VARCHAR(255) NOT NULL'
 		),
@@ -80,6 +80,6 @@ $db = Database::instance();
 $fpdo = $db->fluent();
 
 $fpdo->from('user')
-	->where(array('email', 'someguy@gmail.com')
+	->where(array('email', 'someguy@gmail.com'))
 	// etc...
 ```
