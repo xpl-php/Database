@@ -24,46 +24,46 @@ class Database {
 	public $num_queries;
 	
 	/**
+	 * FluentPDO object
+	 * @var FluentPDO
+	 */
+	protected $fpdo;
+	
+	/**
 	 * Database Name
 	 * @var string
 	 */
-	protected $name;
+	protected static $name;
 	
 	/**
 	 * Database Host
 	 * @var string
 	 */
-	protected $host;
+	protected static $host;
 	
 	/**
 	 * Database User
 	 * @var string
 	 */
-	protected $user;
+	protected static $user;
 	
 	/**
 	 * Database Password
 	 * @var string
 	 */
-	protected $pass;
+	protected static $pass;
 	
 	/**
 	 * Database Driver
 	 * @var string
 	 */
-	protected $driver;
+	protected static $driver;
 	
 	/**
 	 * Table prefix
 	 * @var string
 	 */
-	protected $prefix;
-	
-	/**
-	 * FluentPDO object
-	 * @var FluentPDO
-	 */
-	protected $fpdo;
+	protected static $prefix;
 	
 	/**
 	 * Whether currently connected
@@ -75,15 +75,15 @@ class Database {
 	 * Singleton instance.
 	 * @var Database
 	 */
-	protected static $_instance;
+	protected static $instance;
 	
 	/**
 	 * Returns singleton.
 	 */
 	public static function instance(){
-		if ( ! isset(self::$_instance) )
-			self::$_instance = new self();
-		return self::$_instance;
+		if ( ! isset(self::$instance) )
+			self::$instance = new self();
+		return self::$instance;
 	}
 	
 	/**
@@ -99,16 +99,14 @@ class Database {
 	 */
 	public static function init($dbName, $dbHost, $dbUser, $dbPass, $tablePrefix = '', $dbDriver = 'mysql'){
 		
-		$_this = self::instance();
-		
-		$_this->name = $dbName;
-		$_this->host = $dbHost;
-		$_this->user = $dbUser;
-		$_this->pass = $dbPass;
-		$_this->prefix = $tablePrefix;
+		self::$name = $dbName;
+		self::$host = $dbHost;
+		self::$user = $dbUser;
+		self::$pass = $dbPass;
+		self::$prefix = $tablePrefix;
 		
 		// Skip driver check if reinitializing with same driver.
-		if ( isset($_this->driver) && $dbDriver == $_this->driver )
+		if ( isset(self::$driver) && $dbDriver == self::$driver )
 			return;
 		
 		$drivers = PDO::getAvailableDrivers();
@@ -117,7 +115,21 @@ class Database {
 			throw new Exception("Invalid database driver $dbDriver.");
 		}
 		
-		$_this->setDriver($dbDriver);
+		self::setDriver($dbDriver);
+	}
+	
+	/**
+	 * Sets the database driver (string).
+	 */
+	public static function setDriver( $driver ){
+		self::$driver = strtolower($driver);
+	}
+	
+	/**
+	 * Returns database driver string.
+	 */
+	public static function getDriver(){
+		return self::$driver;
 	}
 	
 	/**
@@ -125,11 +137,9 @@ class Database {
 	 */
 	public static function connect(){
 		
-		$_this = self::instance();
+		$dsn = self::getDriver() . ':dbname='. self::$name . ';host=' . self::$host;
 		
-		$dsn = $_this->getDriver() . ':dbname='. $_this->name . ';host=' . $_this->host;
-		
-		$_this->fpdo = new \FluentPDO\FluentPDO( new PDO($dsn, $_this->user, $_this->pass) );
+		self::instance()->fpdo = new \FluentPDO\FluentPDO( new PDO($dsn, self::$user, self::$pass) );
 				
 		self::$connected = true;
 	}
@@ -152,6 +162,32 @@ class Database {
 	}
 	
 	/**
+	 * Sets the database table prefix.
+	 * 
+	 * If already connected, disconnects and reinitializes using current
+	 * connection settings, then reconnects.
+	 */
+	public function setPrefix( $prefix ){
+			
+		if ( $this->isConnected() ){
+			self::disconnect();
+			self::init(self::$name, self::$host, self::$user, self::$pass, self::$prefix, self::$driver);
+			self::connect();
+		} else {
+			self::$prefix = $prefix;
+		}
+		
+		return $this;
+	}
+	
+	/**
+	 * Returns the database's table prefix.
+	 */
+	public function getPrefix(){
+		return self::$prefix;
+	}
+	
+	/**
 	 * Whether to debug FluentPDO
 	 */
 	public function setDebug( $value ){
@@ -166,54 +202,13 @@ class Database {
 	}
 	
 	/**
-	 * Sets the database driver (string).
-	 */
-	public function setDriver( $driver ){
-		$this->driver = strtolower($driver);
-		return $this;
-	}
-	
-	/**
-	 * Returns database driver string.
-	 */
-	public function getDriver(){
-		return $this->driver;
-	}
-	
-	/**
-	 * Sets the database table prefix.
-	 * 
-	 * If already connected, disconnects and reinitializes using current
-	 * connection settings, then reconnects.
-	 */
-	public function setPrefix( $prefix ){
-			
-		if ( $this->isConnected() ){
-			self::disconnect();
-			self::init($this->name, $this->host, $this->user, $this->pass, $prefix, $this->driver);
-			self::connect();
-		} else {
-			$this->prefix = $prefix;
-		}
-		
-		return $this;
-	}
-	
-	/**
-	 * Returns the database's table prefix.
-	 */
-	public function getPrefix(){
-		return $this->prefix;
-	}
-	
-	/**
 	 * Tries to convert a table's basename to a full (prefixed) table name.
 	 * 
 	 * Does not perform any validation.
 	 */
 	public function filterTableName( $table ){
 		
-		if ( isset( $this->tables[ $table ] ) )
+		if ( isset($this->tables[$table]) )
 			return $table;
 		
 		return $this->getPrefix() . $table;
@@ -246,7 +241,7 @@ class Database {
 	*/
 	public function table( $table ){
 		
-		$table = $this->filterTableName( $table );
+		$table = $this->filterTableName($table);
 		
 		if ( ! isset($this->tables[ $table ]) ){
 			return null;

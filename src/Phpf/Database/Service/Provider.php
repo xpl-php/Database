@@ -16,8 +16,6 @@ class Provider implements \Phpf\Service\Provider {
 	
 	public function provide(){
 			
-		include dirname(__DIR__) . '/functions.php';
-		
 		// FluentPDO autoloader
 		spl_autoload_register( function ($class){
 			
