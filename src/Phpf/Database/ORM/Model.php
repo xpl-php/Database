@@ -14,6 +14,10 @@ abstract class Model {
 	
 	protected $table;
 	
+	protected $fetch_objects = false;
+	
+	protected $object_class;
+	
 	/**
 	 * Imports Table object from database.
 	 */
@@ -34,6 +38,13 @@ abstract class Model {
 	 */
 	final public function getTableName(){
 		return $this->tablename;
+	}
+	
+	/**
+	 * Returns the primary key name for table.
+	 */
+	final public function getPrimaryKey(){
+		return $this->schema()->primary_key;
 	}
 	
 	/**
@@ -74,6 +85,29 @@ abstract class Model {
 	 */
 	final public function getColumnFormat( $key ){
 		return $this->table->schema()->getColumnFormat( $key );	
+	}
+	
+	/**
+	 * Set whether to return objects.
+	 * Must set object_class before setting to true.
+	 */
+	final public function setFetchObjects( $val ){
+		
+		if ( $val && !isset($this->object_class) ){
+			throw new \RuntimeException("Must set object_class property before calling setFetchObjects().");
+		} else {
+			$this->fetch_objects = (bool) $val;
+		}
+		
+		return $this;
+	}
+	
+	/**
+	 * Set the class to use for returned objects.
+	 */
+	final public function setObjectClass( $class ){
+		$this->object_class = $class;
+		return $this;
 	}
 		
 	/**
@@ -139,7 +173,38 @@ abstract class Model {
 	* @see Database::select()
 	*/
 	public function select( $where, $select = '*' ){
-		return $this->table->select( $where, $select );
+			
+		$data = $this->table->select( $where, $select );
+		
+		if ( empty($data) || is_scalar($data) ){
+			return $data;
+		}
+		
+		if ( 1 === count($data) ){
+			
+			$data = array_shift($data);
+			
+			if ( !$this->fetch_objects ){
+				return $data;
+			} else {
+				$class = $this->object_class;
+				return new $class($data);
+			}
+		}
+		
+		$objects = array();
+		$pk = $this->getPrimaryKey();
+		
+		foreach( $data as $obj ){
+			if ( $this->fetch_objects ){
+				$class = $this->object_class;
+				$objects[ $obj->$pk ] = new $class($obj);
+			} else {
+				$objects[ $obj->$pk ] = $obj;
+			}
+		}
+		
+		return $objects;
 	}
 	
 	/**
