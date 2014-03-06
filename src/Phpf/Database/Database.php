@@ -137,11 +137,26 @@ class Database {
 	 */
 	public static function connect(){
 		
+		self::registerFluentPDOAutoloader();
+		
 		$dsn = self::getDriver() . ':dbname='. self::$name . ';host=' . self::$host;
 		
 		self::instance()->fpdo = new \FluentPDO\FluentPDO( new PDO($dsn, self::$user, self::$pass) );
 				
 		self::$connected = true;
+	}
+	
+	/**
+	 * Registers an autoloader for namespaced FluentPDO
+	 */
+	protected static function registerFluentPDOAutoloader(){
+			
+		spl_autoload_register( function ($class) {
+			if ( 0 === strpos($class, 'FluentPDO') ){
+				$path = __DIR__ . '/' . str_replace('\\', '/', $class) . '.php';
+				require $path;
+			}
+		});
 	}
 	
 	/**
