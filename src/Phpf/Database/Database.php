@@ -9,7 +9,7 @@ namespace Phpf\Database;
 use PDO;
 use Exception;
 
-class Database {
+class Database implements \Phpf\Util\Singleton {
 	
 	/**
 	 * Whether to debug queries.
@@ -90,8 +90,18 @@ class Database {
 	 * Rests $num_queries and $connected
 	 */
 	private function __construct(){
+		
 		$this->num_queries = 0;
 		self::$connected = false;
+		
+		// FluentPDO autoloader
+		spl_autoload_register( function ($class) {
+				
+			if ( 0 === strpos($class, 'FluentPDO') ){
+				$path = __DIR__ . '/' . str_replace('\\', '/', $class) . '.php';
+				require $path;
+			}
+		});		
 	}
 	
 	/**
@@ -137,26 +147,11 @@ class Database {
 	 */
 	public static function connect(){
 		
-		self::registerFluentPDOAutoloader();
-		
 		$dsn = self::getDriver() . ':dbname='. self::$name . ';host=' . self::$host;
 		
 		self::instance()->fpdo = new \FluentPDO\FluentPDO( new PDO($dsn, self::$user, self::$pass) );
 				
 		self::$connected = true;
-	}
-	
-	/**
-	 * Registers an autoloader for namespaced FluentPDO
-	 */
-	protected static function registerFluentPDOAutoloader(){
-			
-		spl_autoload_register( function ($class) {
-			if ( 0 === strpos($class, 'FluentPDO') ){
-				$path = __DIR__ . '/' . str_replace('\\', '/', $class) . '.php';
-				require $path;
-			}
-		});
 	}
 	
 	/**
