@@ -243,6 +243,10 @@ class Database implements \Phpf\Util\Singleton {
 		return $this;
 	}
 	
+	public function getTables(){
+		return $this->tables;
+	}
+	
 	/**
 	* Return a registered Table object.
 	*

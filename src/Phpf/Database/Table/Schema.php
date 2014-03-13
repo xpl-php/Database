@@ -65,7 +65,7 @@ class Schema {
 			return '%d';
 		if ( strpos($field, 'float') !== false )
 			return '%f';
-		else
+		else 
 			return '%s';
 	}
 	

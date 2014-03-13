@@ -27,6 +27,13 @@ abstract class Model {
 	}
 	
 	/**
+	 * Returns FluentPDO instance
+	 */
+	final public function fluent(){
+		return Database::instance()->fluent();
+	}
+	
+	/**
 	 * Returns table basename string.
 	 * @return string Table basename
 	 */
