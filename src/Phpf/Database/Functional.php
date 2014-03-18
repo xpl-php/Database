@@ -17,7 +17,49 @@ namespace {
 	function database(){
 		return Database::instance();	
 	}
+	
+	/**
+	 * Creates and registers a database table schema.
+	 */
+	function db_table_schema($name, array $columns, $primary_key = 'id', array $unique_keys = null, array $keys = null){
 		
+		$schema = array(
+			'table_basename' => $name,
+			'columns' => array(),
+			'primary_key' => $primary_key,
+			'unique_keys' => array(),
+			'keys' => array()
+		);
+		
+		foreach($columns as $col => $dtype){
+			$schema['columns'][$col] = strtolower($dtype);
+		}
+		
+		if ( isset($unique_keys) ){
+			foreach($unique_keys as $idx => $key){
+				
+				if (is_numeric($idx)){
+					$schema['unique_keys'][$key] = $key;
+				} else {
+					$schema['unique_keys'][$idx] = $key;
+				}
+			}
+		}
+		
+		if ( isset($keys) ){
+			foreach($keys as $idx => $key){
+				
+				if (is_numeric($idx)){
+					$schema['keys'][$key] = $key;
+				} else {
+					$schema['keys'][$idx] = $key;
+				}
+			}
+		}
+		
+		\Database::instance()->registerSchema(new \Phpf\Database\Table\Schema($schema));
+	}
+			
 	/**
 	 * Creates and registers a table schema.
 	 */
