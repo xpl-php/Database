@@ -27,17 +27,17 @@ abstract class Model {
 	}
 	
 	/**
+	 * Returns table basename string.
+	 * @return string Table basename
+	 */
+	abstract public function getTableBasename();
+	
+	/**
 	 * Returns FluentPDO instance
 	 */
 	final public function fluent(){
 		return Database::instance()->fluent();
 	}
-	
-	/**
-	 * Returns table basename string.
-	 * @return string Table basename
-	 */
-	abstract public function getTableBasename();
 	
 	/**
 	 * Returns the table name.
@@ -66,9 +66,9 @@ abstract class Model {
 	 * Returns model's Table's Schema instance.
 	 * @return Table\Schema
 	 */
-	 final public function schema(){
+	final public function schema(){
 	 	return $this->table->schema();
-	 }
+	}
 	
 	/**
 	 * Returns true if value is a column name for the table.

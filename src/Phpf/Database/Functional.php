@@ -9,15 +9,6 @@ namespace Phpf\Database {
 
 namespace {
 	
-	use Phpf\Database\Database;
-		
-	/**
-	 * Returns the database instance
-	 */
-	function database(){
-		return Database::instance();	
-	}
-	
 	/**
 	 * Creates and registers a database table schema.
 	 */
@@ -37,7 +28,6 @@ namespace {
 		
 		if ( isset($unique_keys) ){
 			foreach($unique_keys as $idx => $key){
-				
 				if (is_numeric($idx)){
 					$schema['unique_keys'][$key] = $key;
 				} else {
@@ -48,7 +38,6 @@ namespace {
 		
 		if ( isset($keys) ){
 			foreach($keys as $idx => $key){
-				
 				if (is_numeric($idx)){
 					$schema['keys'][$key] = $key;
 				} else {
@@ -57,15 +46,15 @@ namespace {
 			}
 		}
 		
-		\Database::instance()->registerSchema(new \Phpf\Database\Table\Schema($schema));
+		\Phpf\Database\Database::instance()->registerSchema(new \Phpf\Database\Table\Schema($schema));
 	}
 			
 	/**
 	 * Creates and registers a table schema.
 	 */
 	function db_register_schema( array $data ){
-		if ( $schema = new \Phpf\Database\Table\Schema($data) ){
-			Database::instance()->registerSchema($schema);
+		if ($schema = new \Phpf\Database\Table\Schema($data)) {
+			\Phpf\Database\Database::instance()->registerSchema($schema);
 			return true;
 		}
 		return false;
@@ -75,28 +64,28 @@ namespace {
 	 * Returns a Schema instance
 	 */
 	function db_get_schema( $name ){
-		return Database::instance()->schema($name);	
+		return \Phpf\Database\Database::instance()->schema($name);	
 	}
 	
 	/**
 	 * Returns a Table instance
 	 */
 	function db_get_table( $name ){
-		return Database::instance()->table($name);	
+		return \Phpf\Database\Database::instance()->table($name);	
 	}
 	
 	/**
 	 * Returns array of installed table names.
 	 */
 	function db_get_installed_tables(){
-		return Database::instance()->getInstalledTables();
+		return \Phpf\Database\Database::instance()->getInstalledTables();
 	}
 	
 	/**
 	 * Returns number of queries run during current request.
 	 */
 	function db_get_query_count(){
-		return Database::instance()->num_queries;
+		return \Phpf\Database\Database::instance()->num_queries;
 	}
 	
 	/**
@@ -104,9 +93,9 @@ namespace {
 	 */
 	function db_create_table( $table ){
 		
-		$db = Database::instance();
+		$db = \Phpf\Database\Database::instance();
 		
-		if ( $db->isTableInstalled($table) )
+		if ($db->isTableInstalled($table))
 			return 2;
 		
 		$schema = $db->schema($table);
@@ -123,9 +112,9 @@ namespace {
 	 */
 	function db_drop_table( $table ) {
 		
-		$db = Database::instance();
+		$db = \Phpf\Database\Database::instance();
 		
-		if ( ! $db->isTableInstalled($table) )
+		if (! $db->isTableInstalled($table))
 			return 2;
 	
 		$schema = $db->schema($table);
