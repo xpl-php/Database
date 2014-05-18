@@ -1,7 +1,8 @@
 <?php
 
-namespace Phpf\Database\Table;
+namespace Phpf\Database\Table\Relation;
 
+use Phpf\Database\Table\Object\ModelAware;
 use InvalidArgumentException;
 
 class Relationship {
@@ -13,12 +14,10 @@ class Relationship {
 	public function __construct(Relation $relation, $table) {
 		
 		if (! is_string($table)) {
-				
-			if (! $table instanceof ModelAwareObject) {
+			if (! $table instanceof ModelAware) {
 				$msg = 'Table must be table name string or instance of ModelAwareObject - '.gettype($table).' given.';
 				throw new InvalidArgumentException($msg);
 			}
-			
 			$table = $table->getTableName();
 		}
 		

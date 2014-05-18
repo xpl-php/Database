@@ -5,11 +5,9 @@
 
 namespace Phpf\Database;
 
-use Phpf\Common\SingletonInterface;
 use PDO;
-use OutOfBoundsException;
 
-class Database implements SingletonInterface
+class Database
 {
 
 	/**
@@ -19,166 +17,170 @@ class Database implements SingletonInterface
 	public $debug;
 
 	/**
-	 * Number of queries run
+	 * Number of queries run during request.
 	 * @var int
 	 */
 	public $num_queries;
-
+	
 	/**
-	 * FluentPDO object
+	 * Whether currently connected.
+	 * @var boolean
+	 */
+	protected $connected;
+	
+	/**
+	 * FluentPDO object.
 	 * @var FluentPDO
 	 */
 	protected $fpdo;
 	
 	/**
-	 * Table objects
+	 * Table objects.
 	 * @var array
 	 */
 	protected $tables = array();
+
+	/**
+	 * The primary database name.
+	 * @var string
+	 */
+	protected static $primary_db;
 	
 	/**
-	 * Connection credentials
+	 * Configuration objects for each database.
 	 * @var array
 	 */
-	protected static $credentials;
+	protected static $config = array();
 
 	/**
-	 * Database Driver
-	 * @var string
+	 * Database instances.
+	 * @var array
 	 */
-	protected static $driver;
+	protected static $instances = array();
 
 	/**
-	 * Table prefix
-	 * @var string
+	 * Returns database instance.
+	 * 
+	 * @param string $db Database name, or null for primary (if set).
+	 * @return \Phpf\Database\Database Database instance.
+	 * @throws RuntimeException if no database given and no primary set.
+	 * @throws InvalidArgumentException if database given has no config object.
 	 */
-	protected static $prefix;
-
-	/**
-	 * Whether currently connected
-	 * @var boolean
-	 */
-	protected $connected;
-
-	/**
-	 * Singleton instance.
-	 * @var Database
-	 */
-	protected static $instance;
-
-	/**
-	 * Returns singleton.
-	 */
-	public static function instance() {
-		if (! isset(static::$instance))
-			static::$instance = new static();
-		return static::$instance;
+	public static function instance($db = null) {
+		
+		if (! isset($db)) {
+				
+			if (! isset(static::$primary_db)) {
+				throw new \RuntimeException("Can not get database instance - no database given and no primary set.");
+			}
+			
+			$db = static::$primary_db;
+		}
+		
+		if (! isset(static::$instances[$db])) {
+				
+			if (! isset(static::$config[$db])) {
+				throw new \InvalidArgumentException("Unknown database given: '$db'.");
+			}
+			
+			static::$instances[$db] = new static($db);
+		}
+		
+		return static::$instances[$db];
 	}
 
 	/**
 	 * Rests $num_queries and $connected
 	 */
-	private function __construct() {
-
+	public function __construct($database) {
+		
+		$this->database = $database;
 		$this->num_queries = 0;
 		$this->connected = false;
 
 		// FluentPDO autoloader
-		spl_autoload_register(function($class) {
-			if (0 === strpos($class, 'FluentPDO')) {
-				include __DIR__.'/'.str_replace('\\', '/', $class).'.php';
-			}
-		});
+		autoload_namespace('FluentPDO', __DIR__);
 	}
 
 	/**
-	 * Sets database connection settings as properties.
+	 * Connects database using using config settings of given DB.
 	 */
-	public static function init($dbName, $dbHost, $dbUser, $dbPass, $tablePrefix = '', $dbDriver = 'mysql') {
+	public static function connect($db = null) {
+			
+		$database = static::instance($db);
 		
-		static::$credentials = array(
-			'name' => $dbName,
-			'host' => $dbHost,
-			'user' => $dbUser,
-			'pass' => $dbPass,
-		);
-		
-		static::$prefix = $tablePrefix;
-
-		static::setDriver($dbDriver);
-	}
-
-	/**
-	 * Sets the database driver (string).
-	 */
-	public static function setDriver($driver) {
-		
-		// Skip if setting to existing driver.
-		if (isset(static::$driver) && $driver == static::$driver)
-			return;
-
-		if (! in_array($driver, PDO::getAvailableDrivers(), true)) {
-			throw new OutOfBoundsException("Invalid database driver $driver.");
+		if (! $database->isConnected()) {
+			
+			$conf = static::getConfig($db);
+			
+			$pdo = new PDO($conf->getDsn(), $conf->getUser(), $conf->getPassword());
+			
+			$database->fpdo = new \FluentPDO\FluentPDO($pdo);
+			
+			$database->connected = true;
 		}
-		
-		if (static::instance()->isConnected()) {
-			static::reconnect(array('driver' => $driver));
-		} else {
-			static::$driver = $driver;
-		}
-	}
-
-	/**
-	 * Returns database driver string.
-	 */
-	public static function getDriver() {
-		return static::$driver;
-	}
-
-	/**
-	 * Connects to the database using settings from init().
-	 */
-	public static function connect() {
-
-		$db = static::instance();
-
-		$dsn = static::$driver.':dbname='.static::$credentials['name'].';host='.static::$credentials['host'];
-				
-		$db->fpdo = new \FluentPDO\FluentPDO(
-			new PDO($dsn, static::$credentials['user'], static::$credentials['pass'])
-		);
-		
-		$db->connected = true;
 	}
 
 	/**
 	 * Destroys the current database connection.
 	 */
-	public static function disconnect() {
+	public static function disconnect($db = null) {
+			
+		$database = static::instance($db);
 		
-		$db = static::instance();
-		
-		unset($db->fpdo);
-		
-		$db->connected = false;
+		if ($database->isConnected()) {
+			unset($database->fpdo);
+			$database->connected = false;
+		}
 	}
 	
 	/**
 	 * Destroys and and re-establishes connection.
 	 */
-	public static function reconnect(array $info = array()) {
+	public static function reconnect($db = null, array $info = null) {
 		
-		$info = array_merge(
-			static::$credentials, 
-			array('driver' => static::$driver, 'prefix' => static::$prefix), 
-			$info
-		);
+		// disconnect
+		static::disconnect($db);
 		
-		static::disconnect();
+		if (! empty($info)) {
+			
+			// get current config
+			$config = static::getConfig($db);
+			
+			// Merge the new settings and set
+			static::config($config->import($info));
+		}
 		
-		static::init($info['name'], $info['host'], $info['user'], $info['pass'], $info['prefix'], $info['driver']);
+		// connect
+		static::connect($db);
+	}
+	
+	/**
+	 * Adds a db config object.
+	 * 
+	 * @param Phpf\Database\Config $conf Configuration object.
+	 * @return void
+	 */
+	public static function config(Config $conf) {
 		
-		static::connect();
+		static::$config[$conf->getDatabase()] = $conf;
+		
+		if ($conf->isPrimary()) {
+			static::$primary_db = $conf->getDatabase();
+		}
+	}
+	
+	/**
+	 * Gets the config object for a database.
+	 * 
+	 * @param string|null $database Database name, or null for primary.
+	 * @return Phpf\Database\Config Object if set, otherwise null.
+	 */
+	public static function getConfig($database = null) {
+		if (! isset($database)) {
+			$database = static::$primary_db;
+		}
+		return isset(static::$config[$database]) ? static::$config[$database] : null;
 	}
 	
 	/**
@@ -194,14 +196,14 @@ class Database implements SingletonInterface
 	 * If already connected, disconnects and reinitializes using current
 	 * connection settings, then reconnects.
 	 */
-	public function setPrefix($prefix) {
+	public function setTablePrefix($prefix) {
 
 		if ($this->isConnected()) {
-				
-			static::reconnect(array('prefix' => $prefix));
-			
+			static::reconnect($this->database, array('prefix' => $prefix));
 		} else {
-			static::$prefix = $prefix;
+			$config = static::getConfig($this->database);
+			$config->setTablePrefix($prefix);
+			static::config($config);
 		}
 
 		return $this;
@@ -210,8 +212,8 @@ class Database implements SingletonInterface
 	/**
 	 * Returns the database's table prefix.
 	 */
-	public function getPrefix() {
-		return static::$prefix;
+	public function getTablePrefix() {
+		return static::getConfig($this->database)->getTablePrefix();
 	}
 
 	/**
@@ -238,7 +240,7 @@ class Database implements SingletonInterface
 		if (isset($this->tables[$table]))
 			return $table;
 
-		return $this->getPrefix().$table;
+		return $this->getTablePrefix().$table;
 	}
 
 	/**
@@ -253,7 +255,7 @@ class Database implements SingletonInterface
 	 */
 	public function registerSchema(Table\Schema $schema) {
 
-		$schema->setTablePrefix($this->getPrefix());
+		$schema->setTablePrefix($this->getTablePrefix());
 
 		$this->tables[$schema->getName()] = new Table($schema, $this);
 
@@ -303,7 +305,7 @@ class Database implements SingletonInterface
 	public function pdo() {
 
 		if (! $this->isConnected()) {
-			static::connect();
+			static::connect($this->database);
 		}
 
 		return $this->fpdo->pdo;
@@ -315,7 +317,7 @@ class Database implements SingletonInterface
 	public function fluent() {
 
 		if (! $this->isConnected()) {
-			static::connect();
+			static::connect($this->database);
 		}
 
 		return $this->fpdo;
@@ -337,7 +339,7 @@ class Database implements SingletonInterface
 	public function select($table, $where, $select = '*', $asObjects = true) {
 
 		if (! $this->isConnected()) {
-			static::connect();
+			static::connect($this->database);
 		}
 
 		if ('*' !== $select) {
@@ -357,7 +359,7 @@ class Database implements SingletonInterface
 	public function insert($table, array $data) {
 
 		if (! $this->isConnected()) {
-			static::connect();
+			static::connect($this->database);
 		}
 
 		$this->num_queries++;
@@ -371,7 +373,7 @@ class Database implements SingletonInterface
 	public function update($table, array $data, $key, $keyValue = null) {
 
 		if (! $this->isConnected()) {
-			static::connect();
+			static::connect($this->database);
 		}
 
 		$this->num_queries++;
@@ -385,7 +387,7 @@ class Database implements SingletonInterface
 	public function delete($table, $key, $keyValue = null) {
 
 		if (! $this->isConnected()) {
-			static::connect();
+			static::connect($this->database);
 		}
 
 		$this->num_queries++;

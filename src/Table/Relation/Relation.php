@@ -1,6 +1,6 @@
 <?php
 
-namespace Phpf\Database\Table;
+namespace Phpf\Database\Table\Relation;
 
 use InvalidArgumentException;
 

@@ -2,8 +2,6 @@
 
 namespace Phpf\Database\Table;
 
-use InvalidArgumentException;
-
 class Schema
 {
 	
@@ -152,39 +150,82 @@ class Schema
 		return $this;
 	}
 	
-	public function hasRelations($column = null) {
-		
-		if (isset($column)) {
-			return ! empty($this->relations[$column]);
+	/**
+	 * Returns true if the table has any relations.
+	 * 
+	 * @return boolean True if relations exist, otherwise false.
+	 */
+	public function hasRelations($table = null) {
+		if (isset($table)) {
+			return ! empty($this->relations[$table]);
 		}
-		
 		return ! empty($this->relations);
 	}
 	
-	public function getRelations($column = null) {
-		
-		if (isset($column)) {
-			return isset($this->relations[$column]) ? $this->relations[$column] : null;
+	/**
+	 * Returns relations objects for the table.
+	 * 
+	 * @return array Relation objects for the table.
+	 */
+	public function getRelations($table = null) {
+		if (isset($table)) {
+			return isset($this->relations[$table]) ? $this->relations[$table] : null;
 		}
-		
 		return $this->relations;
 	}
 	
+	/**
+	 * Defines a table relation at runtime.
+	 * 
+	 * @param string $type Relation type - one of "one_to_one", "one_to_many" or "many_to_many".
+	 * @param string $column Column name in this table (the native key) for the relation.
+	 * @param string $foreign_table Foreign table name (no prefix).
+	 * @param string $foreign_key Foreign table column key.
+	 * @return $this
+	 */
 	public function addRelation($type, $column, $foreign_table, $foreign_key) {
 		
 		if (! isset($this->columns[$column])) {
-			throw new InvalidArgumentException("Invalid table column '$column'.");
+			throw new \InvalidArgumentException("Invalid table column '$column'.");
 		}
 		
-		$relation = new Relation($type, $this->getBasename(), $column, $foreign_table, $foreign_key);
+		switch($type) {
+			
+			case 'one_to_one' :
+				$relation = new Relation\OneToOne($this, $column, $foreign_table, $foreign_key);
+				break;
+				
+			case 'one_to_many' :
+				$relation = new Relation\OneToMany($this, $column, $foreign_table, $foreign_key);
+				break;
+			
+			case 'many_to_many' :
+				$relation = new Relation\ManyToMany($this, $column, $foreign_table, $foreign_key);
+				break;
+			
+			default :
+				throw new InvalidArgumentException("Unknown relation type '$type'.");
+		}
 		
-		$this->relations[$column][$foreign_table] = $relation;
+		$this->relations[$foreign_table][$column] = $relation;
+		
+		return $this;
 	}
 	
+	/**
+	 * Returns the full table name (with prefix, if set).
+	 * 
+	 * @return string Table name with prefix.
+	 */
 	final public function getName() {
 		return $this->name;
 	}
 	
+	/**
+	 * Returns the table name (without prefix).
+	 * 
+	 * @return string Table name without prefix.
+	 */
 	final public function getBasename() {
 		return $this->basename;
 	}

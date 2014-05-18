@@ -6,7 +6,6 @@
 namespace Phpf\Database;
 
 use RuntimeException;
-use Phpf\Database\Table\ModelAwareObject;
 
 abstract class Model
 {
@@ -178,6 +177,11 @@ abstract class Model
 
 	/**
 	 * Select a row or (columns from a row) from the table.
+	 * 
+	 * Creates objects if $fetch_objects is true or a class name.
+	 * 
+	 * If multiple rows are returned, returns an array with the keys
+	 * set to the primary key value of each item.
 	 *
 	 * @see Database::select()
 	 */
@@ -207,17 +211,23 @@ abstract class Model
 		return array_combine($keys, $values);
 	}
 	
+	/**
+	 * Creates an object from data.
+	 * 
+	 * Uses the model's class, if set, otherwise the standard model-aware object.
+	 * 
+	 * @param mixed $data Object data.
+	 * @return \Phpf\Database\Table\Object\ModelAware Instance of model-aware object.
+	 */
 	public function createObject($data) {
 		
-		if (true === $this->fetch_objects) {
-			$class = 'Phpf\Database\Table\ModelAwareObject';
-		} else {
-			$class = $this->fetch_objects;
-		}
+		$class = (true === $this->fetch_objects) 
+			? 'Phpf\Database\Table\Object\ModelAware' 
+			: $this->fetch_objects;
 		
 		$object = new $class($data);
 		
-		if ($object instanceof ModelAwareObject) {
+		if ($object instanceof Table\Object\ModelAware) {
 			$object->setModelClass(get_called_class());
 		}
 		
@@ -229,7 +239,7 @@ abstract class Model
 		if (isset($this->collection_class)) {
 			$class = $this->collection_class;
 		} else {
-			$class = 'Phpf\Database\Table\Collection';
+			$class = 'Phpf\Database\Table\Object\Collection';
 		}
 		
 		return new $class($objects);

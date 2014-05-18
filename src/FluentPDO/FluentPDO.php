@@ -24,7 +24,7 @@ class FluentPDO {
 	/** @var boolean|callback */
 	public $debug;
 
-	function __construct( PDO $pdo, Fluent\Structure $structure = null) {
+	public function __construct(PDO $pdo, Fluent\Structure $structure = null) {
 		$this->pdo = $pdo;
 		if (!$structure) {
 			$structure = new Fluent\Structure;
