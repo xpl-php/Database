@@ -1,86 +1,66 @@
 <?php
 
-namespace Phpf\Database;
+namespace xpl\Database;
 
-class Table
-{
+use xpl\Data\AdapterInterface;
 
-	protected $db;
-
-	protected $schema;
-
+class Table {
+	
 	/**
-	 * Sets Schema and Database objects as properties.
+	 * @var string
 	 */
-	final public function __construct(Table\Schema $schema, Database &$db) {
-		$this->schema = $schema;
-		$this->db = &$db;
+	protected $table_name;
+	
+	/**
+	 * @var \xpl\Data\AdapterInterface
+	 */
+	protected $adapter;
+	
+	public function __construct($table_name, AdapterInterface $adapter) {
+		$this->table_name = $table_name;
+		$this->adapter = $adapter;
 	}
 	
-	public function __get($var) {
-		return isset($this->$var) ? $this->$var : null;
+	public function getAdapter() {
+		return $this->adapter;
 	}
+	
+	public function fetch(array $conditions = array(), $bool_operator = 'AND') {
+		
+		$this->getAdapter()->select($this->table_name, $conditions, $bool_operator);
 
-	/**
-	 * Returns Schema instance.
-	 * @return Table\Schema
-	 */
-	final public function schema() {
-		return $this->schema;
+		if (! $row = $this->getAdapter()->fetch()) {
+			return null;
+		}
+
+		return $row;
 	}
-
-	/**
-	 * Select a row or (columns from a row) from the table.
-	 *
-	 * @see Database::select()
-	 */
-	public function select($where, $select = '*') {
-		return $this->db->select($this->schema->name, $where, $select);
+	
+	public function fetchAll(array $conditions = array(), $bool_operator = 'AND') {
+			
+		$this->getAdapter()->select($this->table_name, $conditions, $bool_operator);
+		
+		return $this->getAdapter()->fetchAll();
 	}
-
-	/**
-	 * Insert a row into the table.
-	 *
-	 * @see Database::insert()
-	 */
-	public function insert($data) {
-		return $this->db->insert($this->schema->name, $data);
+	
+	public function fetchAllLike(array $conditions = array(), $bool_operator = 'AND') {
+		
+		$this->getAdapter()->selectLike($this->table_name, $conditions, $bool_operator);
+		
+		return $this->getAdapter()->fetchAll();
 	}
-
-	/**
-	 * Update a row in the table
-	 *
-	 * @see Database::update()
-	 */
-	public function update($data, $where) {
-		return $this->db->update($this->schema->name, $data, $where);
+	
+	public function insert(array $data) {
+		return $this->getAdapter()->insert($this->table_name, $data);
 	}
-
-	/**
-	 * Delete a row in the table
-	 *
-	 * @see Database::delete()
-	 */
-	public function delete($where) {
-		return $this->db->delete($this->schema->name, $where);
+	
+	public function update(array $data, array $conditions = array()) {
+		return $this->getAdapter()->update($this->table_name, $data, $conditions);
 	}
-
-	/**
-	 * Update a single row column value in the table
-	 *
-	 * @see Database::update()
-	 */
-	public function updateField($name, $value, array $where) {
-		return $this->update(array($name => $value), $where);
+	
+	public function delete(array $conditions = array()) {
+		return $this->getAdapter()->delete($this->table_name, $conditions);
 	}
-
-	/**
-	 * Performs a query directly on PDO
-	 *
-	 * @see Database::query()
-	 */
-	public function query($query) {
-		return $this->db->query($query);
-	}
-
+	
 }
+
